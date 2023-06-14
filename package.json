@@ -1,0 +1,30 @@
+{
+  "name": "gigslance-email-api",
+  "version": "1.0.0",
+  "description": "A server app for sending Gigslance email campaigns",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://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@github.com/KingDavidJnr/email-api.git"
+  },
+  "keywords": [
+    "emails",
+    "Gigslance",
+    "newsletters"
+  ],
+  "author": "David Oduse",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KingDavidJnr/email-api/issues"
+  },
+  "homepage": "https://github.com/KingDavidJnr/email-api#readme",
+  "dependencies": {
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.1.4",
+    "express": "^4.18.2",
+    "nodemailer": "^6.9.3"
+  }
+}
