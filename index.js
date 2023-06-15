@@ -13,7 +13,7 @@ app.use(express.json());
 const smtpConfig = {
   host: process.env.HOST,
   port: process.env.PORT,
-  secure: process.env.PORT, // Set to true if using SSL
+  secure: process.env.SECURE, // Set to true if using SSL
   auth: {
     user: process.env.USERNAME,
     pass: process.env.PASSWORD,
@@ -22,7 +22,11 @@ const smtpConfig = {
 
 // Read CSV file and send personalized emails
 app.post('/sendEmails', (req, res) => {
-  const { subject, message, csvFilePath } = req.body;
+  const { subject, csvFilePath } = req.body;
+
+  // Read the HTML email template file
+  const htmlTemplate = fs.readFileSync('./public/html/welcomeEmail.html', 'utf-8');
+
 
   // Create a Nodemailer transporter
   const transporter = nodemailer.createTransport(smtpConfig);
@@ -34,15 +38,17 @@ app.post('/sendEmails', (req, res) => {
       // Extract the necessary fields from each row
       const { first_name, last_name, email } = data;
 
-      // Compose the personalized email
-      const personalizedMessage = `Dear ${firstName} ${lastName},\n\n${message}`;
+      // Generate the personalized email content
+      const personalizedMessage = htmlTemplate
+        .replace('[First Name]', first_name)
+        .replace('[Last Name]', last_name);
 
       // Configure the email options
       const mailOptions = {
-        from: 'your_email@example.com',
+        from: 'notifications@gigslance.com',
         to: email,
         subject: subject,
-        text: personalizedMessage,
+        message: personalizedMessage,
       };
 
       // Send the email
