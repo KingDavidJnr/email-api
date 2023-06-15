@@ -54,56 +54,98 @@ To send personalized emails to your CSV email list, follow these steps:
 
 1. Prepare your CSV file with the following columns: `firstName`, `lastName`, and `email`. Ensure the file is correctly formatted.
 
-2. Start the server:
+2. Create an HTML email template file named `template.html` in your codebase and include the desired content. You can use placeholders like `[First Name]` and `[Last Name]` to be dynamically replaced later.
 
-```bash
-npm start
+3. Update the `/sendEmails` route in the Express.js code:
+
+- Open `index.js` file in the project root directory.
+- Locate the following section:
+
+```javascript
+app.post('/sendEmails', (req, res) => {
+  const { subject, csvFilePath } = req.body;
+
+  // Read the HTML email template file
+  const htmlTemplate = fs.readFileSync('path_to_your_template_file.html', 'utf-8');
+
+  // Read the CSV file
+  fs.createReadStream(csvFilePath)
+    .pipe(csv())
+    .on('data', (data) => {
+      const { firstName, lastName, email } = data;
+
+      // Create a Nodemailer transporter for each email
+      const transporter = nodemailer.createTransport(smtpConfig);
+
+      // Generate the personalized email content
+      const personalizedMessage = htmlTemplate
+        .replace('[First Name]', firstName)
+        .replace('[Last Name]', lastName);
+
+      // Configure the email options
+      const mailOptions = {
+        from: 'your_email@example.com',
+        to: email,
+        subject: subject,
+        html: personalizedMessage,
+      };
+
+      // Send the email
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error(`Error sending email to ${email}:`, error);
+        } else {
+          console.log(`Email sent to ${email}:`, info.response);
+        }
+      });
+    })
+    .on('end', () => {
+      console.log('Emails sent successfully');
+      res.send('Emails sent successfully');
+    })
+    .on('error', (error) => {
+      console.error('Error reading CSV file:', error);
+      res.status(500).send('Error reading CSV file');
+    });
+});
 ```
 
-3. Make a POST request to the `/sendEmails` endpoint:
+4. When making a POST request to the `/sendEmails` endpoint, include the `"subject"` and `"csvFilePath"` fields in the request body. The `"subject"` field should contain the subject of the email, and the `"csvFilePath"` field should contain the path to your CSV file.
 
-- URL: `http://localhost:3000/sendEmails`
-- Method: `POST`
-- Request Body:
+   Example POST request using cURL:
 
-```json
-{
-  "subject": "Your Subject",
-  "message": "Your Message",
-  "csvFilePath": "path_to_your_csv_file"
-}
-```
+   ```bash
+   curl -X POST \
+     -H "Content-Type: application/json" \
+     -d '{
+       "subject": "Welcome to Gigslance!",
+       "csvFilePath": "./path/to/your/csv/file.csv"
+     }' \
+     http://localhost:3000/sendEmails
+   ```
 
-Replace the placeholders with the appropriate values:
-- `"Your Subject"`: The subject of the email.
-- `"Your Message"`: The body of the email.
-- `"path_to_your_csv_file"`: The relative or absolute path to your CSV file.
+   Replace `http://localhost:3000` with the appropriate URL if your server is running on a different host or port.
 
-4. Receive the response:
+5. The API will read the HTML template file and the CSV file provided in the request. It will then send personalized emails to each recipient in the CSV file, using the information from the CSV file to replace the placeholders in the email template.
 
-Upon successful sending of the emails, you will receive a response with the message "Emails sent successfully."
+6. Upon successful execution, the API will log the status of each email sent in the console. If any errors occur during the process, they will be logged as well.
 
-## Email Template
+## Usage
 
-The API uses an HTML email template to compose the emails. You can modify the template to suit your needs. Open `email_template.html` in the project root directory and update the HTML code.
+1. Start the server by running the following command:
 
-The template includes placeholders for the user's first name and last name:
+   ```bash
+   npm start
+   ```
 
-```html
-<h1>Welcome to Gigslance!</h1>
-<p>Dear [First Name] [Last Name],</p>
-<!-- Rest of the email content -->
-```
+2. Make a POST request to the `/sendEmails` endpoint using a tool of your choice (e.g., cURL, Postman). Include the `"subject"` and `"csvFilePath"` fields in the request body.
 
-The placeholders will be replaced with the corresponding values from the CSV file when sending the emails.
+3. The API will send personalized emails to each recipient in the CSV file using the provided email template.
 
 ## Conclusion
 
-Congratulations! You have successfully set up and used the Gigslance Email API to send personalized emails to your CSV email list. If you have any questions or issues, please contact our support team at support@gigslance.com.
+Congratulations! You have successfully set up and used the Gigslance Email API to send personalized emails to your CSV email list. You can customize the HTML email template and CSV file according to your requirements.
 
-## Important Notes
+Feel free to explore and extend the functionality of the API to suit your specific needs. If you encounter any issues or have further questions, please don't hesitate to reach out for support.
 
-- Make sure to handle errors, implement security measures, and consider rate limiting or batching if dealing with a large email list.
-- Ensure your CSV file is properly formatted with the required columns: `firstName`, `lastName`, and `email`.
-- Test the API thoroughly before using it in a production environment.
-- Comply with email deliverability best practices to avoid being marked as spam.
+Happy emailing!
